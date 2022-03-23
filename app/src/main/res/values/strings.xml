@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Yassir</string>
+    <!-- Strings related to splash -->
+    <string name="splash_server_down">Server Offline</string>
+    <string name="splash_no_internet">No Internet Connexion</string>
+    <string name="splash_server_unreachable">Server Inaccessible</string>
+
+    <string name="search_name">Search…</string>
+    <string name="loading">loading</string>
+    <string name="empty_list">no data found</string>
+    <string name="overview">Overview: %1$s</string>
+    <string name="release">Release: %1$s</string>
+    <string name="vote">Vote: %1$,.1f</string>
+    <string name="internet_settings">internet settings</string>
+</resources>

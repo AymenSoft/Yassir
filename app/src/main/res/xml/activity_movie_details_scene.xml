@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MotionScene
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:motion="http://schemas.android.com/apk/res-auto">
+
+    <Transition
+        motion:constraintSetEnd="@+id/bottom"
+        motion:constraintSetStart="@id/middle"
+        motion:duration="1000">
+        <KeyFrameSet>
+            <KeyAttribute
+                motion:motionTarget="@+id/rl_body"
+                motion:framePosition="100"
+                android:alpha="0.7" />
+        </KeyFrameSet>
+    </Transition>
+    <Transition
+        motion:constraintSetEnd="@+id/top"
+        motion:constraintSetStart="@id/middle"
+        motion:duration="1000">
+        <KeyFrameSet>
+            <KeyAttribute
+                motion:motionTarget="@+id/rl_body"
+                motion:framePosition="100"/>
+        </KeyFrameSet>
+    </Transition>
+
+    <ConstraintSet android:id="@+id/top">
+        <Constraint
+            android:id="@+id/rl_body"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="100dp" />
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@+id/middle">
+        <Constraint
+            android:id="@+id/rl_body"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="300dp" />
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@+id/bottom">
+        <Constraint
+            android:id="@+id/rl_body"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="570dp" />
+    </ConstraintSet>
+</MotionScene>
