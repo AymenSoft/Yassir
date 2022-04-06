@@ -8,19 +8,16 @@ import android.view.Menu
 import android.view.View
 import android.widget.SearchView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.aymen.yassir.R
 import com.aymen.yassir.databinding.ActivityHomeScreenBinding
 import com.aymen.yassir.models.MoviesItem
-import com.aymen.yassir.retrofit.API
+import com.aymen.yassir.retrofit.movies.MoviesModelFactory
+import com.aymen.yassir.retrofit.movies.MoviesRepository
+import com.aymen.yassir.retrofit.movies.MoviesViewModel
 import com.aymen.yassir.ui.adapters.MoviesAdapter
-import com.aymen.yassir.utils.API_KEY
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 /**
  * show list of movies
@@ -33,6 +30,8 @@ class HomeScreenActivity: AppCompatActivity(), MoviesAdapter.ClickListener {
 
     private var page = 1
 
+    private lateinit var moviesViewModel: MoviesViewModel
+
     private lateinit var adapter: MoviesAdapter
     private lateinit var arrayList: ArrayList<MoviesItem>
 
@@ -40,6 +39,8 @@ class HomeScreenActivity: AppCompatActivity(), MoviesAdapter.ClickListener {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeScreenBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        moviesViewModel = ViewModelProvider(this, MoviesModelFactory(MoviesRepository(), application)).get(MoviesViewModel::class.java)
 
         arrayList = ArrayList()
         adapter = MoviesAdapter(this@HomeScreenActivity)
@@ -57,7 +58,7 @@ class HomeScreenActivity: AppCompatActivity(), MoviesAdapter.ClickListener {
                 if (!recyclerView.canScrollVertically(1) && newState==RecyclerView.SCROLL_STATE_IDLE) {
                     page+=1
                     binding.srlListview.isRefreshing = true
-                    getMovies()
+                    moviesViewModel.getAllMovies(page)
                 }
             }
         })
@@ -70,41 +71,27 @@ class HomeScreenActivity: AppCompatActivity(), MoviesAdapter.ClickListener {
             binding.tvLoading.visibility = View.VISIBLE
             binding.tvLoading.text = resources.getString(R.string.loading)
             binding.srlListview.isRefreshing = true
-            getMovies()
+            moviesViewModel.getAllMovies(page)
         }
 
-        getMovies()
+        moviesViewModel.moviesList.observe(this) {
+            binding.srlListview.isRefreshing = false
+            arrayList.addAll(it)
+            if (arrayList.isEmpty()){
+                binding.tvLoading.visibility= View.VISIBLE
+                binding.tvLoading.text=resources.getString(R.string.empty_list)
+            }else {
+                binding.tvLoading.visibility= View.GONE
+            }
+            adapter.setMovies(arrayList)
+        }
+        moviesViewModel.errorMessage.observe(this){
+            binding.srlListview.isRefreshing = false
+            binding.tvLoading.visibility=View.VISIBLE
+            binding.tvLoading.text=resources.getString(R.string.empty_list)
+        }
+        moviesViewModel.getAllMovies(page)
 
-    }
-
-    //load movies list
-    private fun getMovies(){
-        API.MOVIES_API.getMoviesList(API_KEY,"popularity.desc",page)
-            .enqueue(object: Callback<JsonObject> {
-                override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
-                    binding.srlListview.isRefreshing = false
-
-                    //parse data from result
-                    val list = Gson().fromJson(response.body()!!.getAsJsonArray("results").toString(),Array<MoviesItem>::class.java)
-
-                    arrayList.addAll(list)
-
-                    if (arrayList.isEmpty()){
-                        binding.tvLoading.visibility= View.VISIBLE
-                        binding.tvLoading.text=resources.getString(R.string.empty_list)
-                    }else {
-                        binding.tvLoading.visibility= View.GONE
-                    }
-                    adapter.setMovies(arrayList)
-                }
-
-                override fun onFailure(call: Call<JsonObject>, t: Throwable) {
-                    binding.srlListview.isRefreshing = false
-                    binding.tvLoading.visibility=View.VISIBLE
-                    binding.tvLoading.text=resources.getString(R.string.empty_list)
-                }
-
-            })
     }
 
     //use search from action bar

@@ -1,4 +1,4 @@
-package com.aymen.yassir.retrofit
+package com.aymen.yassir.retrofit.movies
 
 import com.google.gson.JsonObject
 import retrofit2.Call

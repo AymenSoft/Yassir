@@ -6,11 +6,15 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.aymen.yassir.R
 import com.aymen.yassir.databinding.ActivityMovieDetailsBinding
 import com.aymen.yassir.models.Genre
 import com.aymen.yassir.models.MovieDetails
 import com.aymen.yassir.retrofit.API
+import com.aymen.yassir.retrofit.movies.MoviesModelFactory
+import com.aymen.yassir.retrofit.movies.MoviesRepository
+import com.aymen.yassir.retrofit.movies.MoviesViewModel
 import com.aymen.yassir.utils.API_KEY
 import com.aymen.yassir.utils.BIG_POSTER_URL
 import com.aymen.yassir.utils.GestureListener
@@ -38,10 +42,14 @@ class MovieDetailsActivity: AppCompatActivity(), View.OnTouchListener, GestureLi
 
     private var movieId = 0
 
+    private lateinit var moviesViewModel: MoviesViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMovieDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        moviesViewModel = ViewModelProvider(this, MoviesModelFactory(MoviesRepository(), application)).get(MoviesViewModel::class.java)
 
         //extend interface layout to full screen
         binding.layoutDetails.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -55,40 +63,27 @@ class MovieDetailsActivity: AppCompatActivity(), View.OnTouchListener, GestureLi
             finish()
         }
 
+        moviesViewModel.movieDetails.observe(this){
+            binding.tvName.text = it.title
+            binding.tvRelease.text = String.format(resources.getString(R.string.release), it.releaseDate)
+            binding.tvOverview.text = String.format(resources.getString(R.string.overview), it.overview)
+
+            movieCategories(it.genres)
+
+            val poster = "$BIG_POSTER_URL${it.posterPath}"
+            Glide.with(this@MovieDetailsActivity)
+                .load(poster)
+                .into(binding.imgPoster)
+        }
+        moviesViewModel.errorMessage.observe(this){
+            finish()
+        }
+
         //get movie id
         val data = intent
         movieId = data.getIntExtra("movieId", 0)
-        if (movieId > 0) getMovieDetails() else finish()
+        if (movieId > 0) moviesViewModel.getMovieDetails(movieId) else finish()
 
-    }
-
-    //get movie details
-    private fun getMovieDetails(){
-        API.MOVIES_API.getMovieDetails(movieId, API_KEY)
-            .enqueue(object: Callback<JsonObject> {
-                override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
-
-                    //parse data from result
-                    val movie = Gson().fromJson(response.body()!!.toString(),MovieDetails::class.java)
-
-                    binding.tvName.text = movie.title
-                    binding.tvRelease.text = String.format(resources.getString(R.string.release), movie.releaseDate)
-                    binding.tvOverview.text = String.format(resources.getString(R.string.overview), movie.overview)
-
-                    movieCategories(movie.genres)
-
-                    val poster = "$BIG_POSTER_URL${movie.posterPath}"
-                    Glide.with(this@MovieDetailsActivity)
-                        .load(poster)
-                        .into(binding.imgPoster)
-
-                }
-
-                override fun onFailure(call: Call<JsonObject>, t: Throwable) {
-                    finish()
-                }
-
-            })
     }
 
     //show movie categories as tags

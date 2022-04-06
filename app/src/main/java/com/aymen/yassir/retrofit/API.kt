@@ -1,5 +1,7 @@
 package com.aymen.yassir.retrofit
 
+import com.aymen.yassir.retrofit.movies.MoviesAPI
+
 /**
  * get api instance
  * @author Aymen Masmoudi
